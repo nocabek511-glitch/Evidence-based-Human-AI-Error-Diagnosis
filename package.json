@@ -1,0 +1,30 @@
+{
+  "name": "ai-mistake-diagnosis-learning-platform",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "openai:tes": "npm.cmd run openai:test",
+    "openai:test": "node --experimental-strip-types server/openai-test-server.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "openai": "^6.38.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}
