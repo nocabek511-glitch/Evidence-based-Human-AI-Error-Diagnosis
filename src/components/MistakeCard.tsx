@@ -3,6 +3,7 @@ import AbilityMascot, { type Ability } from './AbilityMascot';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
 import Tag, { type TagType } from './Tag';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export type MistakeStatus =
   | '待复习'
@@ -59,25 +60,54 @@ const masteryScore = (mastery: string | number) => {
 };
 
 const inferAbility = (text: string): Ability => {
-  if (text.includes('读题') || text.includes('理解') || text.includes('识别')) {
+  if (
+    text.includes('读题') ||
+    text.includes('理解') ||
+    text.includes('识别') ||
+    text.includes('Understanding')
+  ) {
     return 'reading';
   }
-  if (text.includes('条件') || text.includes('转化') || text.includes('表达式')) {
+  if (
+    text.includes('条件') ||
+    text.includes('转化') ||
+    text.includes('表达式') ||
+    text.includes('Condition') ||
+    text.includes('Translation')
+  ) {
     return 'translation';
   }
-  if (text.includes('模型') || text.includes('建模')) {
+  if (text.includes('模型') || text.includes('建模') || text.includes('Model')) {
     return 'model';
   }
-  if (text.includes('方法') || text.includes('选择') || text.includes('逻辑')) {
+  if (
+    text.includes('方法') ||
+    text.includes('选择') ||
+    text.includes('逻辑') ||
+    text.includes('Strategy')
+  ) {
     return 'method';
   }
-  if (text.includes('计算')) {
+  if (text.includes('计算') || text.includes('Execution')) {
     return 'calculation';
   }
-  if (text.includes('复核') || text.includes('检查')) {
+  if (
+    text.includes('复核') ||
+    text.includes('检查') ||
+    text.includes('Monitoring') ||
+    text.includes('Checking')
+  ) {
     return 'review';
   }
   return 'translation';
+};
+
+const statusKey: Record<MistakeStatus, string> = {
+  待复习: 'To Review',
+  需要巩固: 'Needs Practice',
+  需重做: 'Retry',
+  已掌握: 'Mastered',
+  练习中: 'In Practice',
 };
 
 export default function MistakeCard({
@@ -97,6 +127,7 @@ export default function MistakeCard({
   onRetry,
   onVariantPractice,
 }: MistakeCardProps) {
+  const { t, isEnglish } = useLanguage();
   const resolvedMastery = mastery ?? mistake?.mastery ?? 'L2 初步掌握';
   const resolvedStatus = status ?? inferStatus(resolvedMastery);
   const resolvedTitle = title ?? mistake?.title ?? '未命名错题';
@@ -111,76 +142,75 @@ export default function MistakeCard({
   const reasonAbility = inferAbility(`${resolvedMainReason} ${resolvedBrokenStep}`);
 
   return (
-    <article className="rounded-[2rem] border border-ink/10 bg-white p-5 shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-soft">
+    <article className="rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-soft">
       <div className="flex items-start justify-between gap-5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <Tag type="info">{resolvedKnowledgePoint}</Tag>
-            <Tag type={statusType[resolvedStatus]}>{resolvedStatus}</Tag>
+            <Tag type={statusType[resolvedStatus]}>
+              {isEnglish ? statusKey[resolvedStatus] : resolvedStatus}
+            </Tag>
           </div>
-          <h3 className="mt-4 font-display text-xl font-semibold text-ink">
-            {resolvedTitle}
-          </h3>
+          <h3 className="mt-4 text-xl font-semibold text-ink">{resolvedTitle}</h3>
         </div>
 
-        <div className="shrink-0 rounded-[1.35rem] bg-chalk px-4 py-3 text-right">
-          <p className="text-xs font-medium text-ink/45">掌握度</p>
-          <strong className="mt-1 block font-display text-lg font-semibold text-ink">
+        <div className="shrink-0 rounded-[1.25rem] bg-chalk px-4 py-3 text-right">
+          <p className="text-xs font-medium text-ink/42">{t('components.mastery')}</p>
+          <strong className="mt-1 block text-lg font-semibold text-ink">
             {resolvedMastery}
           </strong>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-[1fr_220px] gap-4">
-        <div className="rounded-[1.5rem] bg-accent-focus p-4">
-          <p className="flex items-center gap-2 text-xs font-medium text-lagoon">
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-[1fr_200px]">
+        <div className="rounded-[1.35rem] bg-accent-focus p-4">
+          <p className="flex items-center gap-2 text-xs font-medium text-ink/50">
             <AbilityMascot ability={reasonAbility} size="tiny" />
-            主要错因
+            {t('components.mainIssue')}
           </p>
-          <p className="mt-2 text-sm font-normal leading-7 text-ink/68">{resolvedMainReason}</p>
+          <p className="mt-2 text-sm font-normal leading-7 text-ink/68">
+            {resolvedMainReason}
+          </p>
         </div>
 
-        <div className="rounded-[1.5rem] bg-accent-warning p-4">
-          <p className="text-xs font-medium text-honey">断链步骤</p>
-          <p className="mt-2 font-display text-xl font-semibold text-ink">
-            {resolvedBrokenStep}
+        <div className="rounded-[1.35rem] bg-accent-warning p-4">
+          <p className="text-xs font-medium text-ink/50">
+            {t('components.stuckStep')}
           </p>
+          <p className="mt-2 text-lg font-semibold text-ink">{resolvedBrokenStep}</p>
         </div>
       </div>
 
-      <div className="mt-6">
-        <div className="mb-2 flex items-center justify-between text-xs font-medium text-ink/50">
-          <span>修复进度</span>
+      <div className="mt-5">
+        <div className="mb-2 flex items-center justify-between text-xs font-medium text-ink/45">
+          <span>{t('components.repairProgress')}</span>
           <span>{progress}%</span>
         </div>
-        <div className="h-2.5 rounded-full bg-chalk">
-          <div
-            className={`h-2.5 rounded-full ${
-              progress >= 85 ? 'bg-grass' : progress >= 65 ? 'bg-sky' : 'bg-peach'
-            }`}
-            style={{ width: `${progress}%` }}
-          />
+        <div className="h-2 rounded-full bg-chalk">
+          <div className="h-2 rounded-full bg-calculation" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-4 rounded-[1.5rem] bg-chalk p-4">
-        <div className="text-sm font-normal text-ink/60">
-          <span>上次练习：{resolvedLastPracticedAt}</span>
+      <div className="mt-5 flex items-center justify-between gap-4 rounded-[1.35rem] bg-chalk p-4">
+        <div className="text-sm font-normal text-ink/55">
+          <span>{t('components.lastPractice')}：{resolvedLastPracticedAt}</span>
           <span className="mx-2 text-ink/25">|</span>
-          <span>练习 {resolvedPracticeCount} 次</span>
+          <span>
+            {t('components.practiceTimes', { count: resolvedPracticeCount })}
+          </span>
         </div>
         <div className="flex shrink-0 gap-2">
           <SecondaryButton onClick={onViewDetail} to={detailTo}>
-            查看详情
+            {t('components.detail')}
           </SecondaryButton>
           <SecondaryButton onClick={onRetry} to={onRetry ? undefined : retryTo}>
-            再做一次
+            {t('components.retry')}
           </SecondaryButton>
           <PrimaryButton
             onClick={onVariantPractice}
             to={onVariantPractice ? undefined : variantTo}
           >
-            做变式题
+            {t('components.variant')}
           </PrimaryButton>
         </div>
       </div>

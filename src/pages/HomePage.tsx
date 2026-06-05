@@ -1,246 +1,213 @@
+import { useState } from 'react';
 import AbilityMascot from '../components/AbilityMascot';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import Tag from '../components/Tag';
-
-const reviewMistakes = [
-  {
-    title: '一次函数应用题',
-    reason: '条件转化',
-    time: '昨天',
-    status: '待复习',
-    type: 'warning' as const,
-  },
-  {
-    title: '几何证明题',
-    reason: '逻辑跳步',
-    time: '3 天前',
-    status: '需巩固',
-    type: 'info' as const,
-  },
-  {
-    title: '二次函数图像题',
-    reason: '建模错误',
-    time: '5 天前',
-    status: '需重做',
-    type: 'danger' as const,
-  },
-];
-
-const abilityScores = [
-  { name: '读题理解', score: 82, ability: 'reading' as const, color: '#F5B1B2' },
-  { name: '条件转化', score: 58, ability: 'translation' as const, color: '#E2CDF7' },
-  { name: '建立模型', score: 61, ability: 'model' as const, color: '#FFD997' },
-  { name: '方法选择', score: 70, ability: 'method' as const, color: '#C8E3A5' },
-  { name: '计算执行', score: 76, ability: 'calculation' as const, color: '#9BD1C5' },
-  { name: '复核检查', score: 49, ability: 'review' as const, color: '#ABC5EF' },
-];
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function HomePage() {
+  const { t, tr } = useLanguage();
+  const todayTasks = tr<[string, string, string][]>('home.tasks');
+  const reviewMistakes = tr<[string, string, string][]>('home.mistakes');
+  const adjustmentOptions = tr<string[]>('home.modalOptions');
+  const statusItems = tr<[string, string][]>('home.statusItems');
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false);
+  const [selectedAdjustment, setSelectedAdjustment] = useState(
+    adjustmentOptions[0],
+  );
+
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-6">
-      <section className="min-w-0 space-y-6">
-        <div className="relative overflow-hidden rounded-[2rem] border border-ink/10 bg-white p-7 shadow-card">
-          <div className="absolute right-8 top-8 h-24 w-24 rounded-full bg-accent-focus" />
-          <div className="absolute bottom-[-38px] right-36 h-28 w-28 rounded-full bg-chalk" />
-          <div className="relative flex items-center justify-between gap-8">
-            <div>
-              <Tag type="info">Daily Dashboard</Tag>
-              <h1 className="mt-4 font-display text-[32px] font-semibold tracking-tight text-ink">
-                今日学习面板
-              </h1>
-              <p className="mt-3 max-w-3xl text-lg font-semibold leading-8 text-ink/60">
-                根据你的近期错题和能力变化，生成今天的学习建议。
-              </p>
+    <>
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,820px)_280px]">
+          <section className="min-w-0">
+          <article className="rounded-[2rem] border border-ink/10 bg-white p-6 shadow-card">
+            <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[minmax(0,1fr)_188px]">
+              <div>
+                <Tag type="warning">{t('home.focusTag')}</Tag>
+                <h1 className="mt-4 max-w-2xl text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                  {t('home.focusTitle')}
+                </h1>
+                <p className="mt-3 max-w-2xl text-[15px] font-normal leading-7 text-ink/62">
+                  {t('home.focusDesc')}
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <PrimaryButton to="/practice" className="px-7">
+                    {t('home.start')}
+                  </PrimaryButton>
+                  <SecondaryButton onClick={() => setIsAdjustOpen(true)}>
+                    {t('home.adjust')}
+                  </SecondaryButton>
+                </div>
+              </div>
+
+              <div className="hidden justify-self-center rounded-[1.75rem] bg-accent-focus p-4 shadow-[0_12px_28px_rgba(47,52,59,0.05)] md:block">
+                <AbilityMascot ability="translation" size="hero" />
+                <p className="mt-2 text-center text-xs font-medium leading-5 text-ink/55">
+                  {t('home.mascotHint')
+                    .split('\n')
+                    .map((line) => (
+                      <span className="block" key={line}>
+                        {line}
+                      </span>
+                    ))}
+                </p>
+              </div>
             </div>
-            <div className="rounded-[2rem] bg-accent-focus p-3">
-              <AbilityMascot ability="translation" size="empty" />
+
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {todayTasks.map(([title, description, time], index) => (
+                <div
+                  className={`min-h-[118px] rounded-[1.35rem] border p-4 transition ${
+                    index === 0
+                      ? 'border-calculation/35 bg-accent-action shadow-[0_10px_24px_rgba(47,52,59,0.04)]'
+                      : 'border-ink/8 bg-white'
+                  }`}
+                  key={title}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span
+                      className={`grid h-8 w-8 place-items-center rounded-full text-sm font-medium ${
+                        index === 0 ? 'bg-calculation text-ink' : 'bg-chalk'
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="rounded-full bg-white/75 px-2.5 py-1 text-xs font-medium text-ink/50">
+                      {time}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-base font-semibold text-ink">
+                    {title}
+                  </p>
+                  <p className="mt-1 text-sm font-normal leading-6 text-ink/52">
+                    {description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <aside className="self-start">
+          <section className="rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card">
+            <Tag type="success">{t('home.statusTitle')}</Tag>
+            <div className="mt-4 space-y-2">
+              {statusItems.map(([label, value]) => (
+                <div
+                  className="flex items-center justify-between rounded-2xl bg-chalk px-4 py-3"
+                  key={label}
+                >
+                  <span className="text-sm font-medium text-ink/55">
+                    {label}
+                  </span>
+                  <span className="text-base font-semibold text-ink">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-2.5 rounded-full bg-chalk">
+              <div className="h-2.5 w-2/5 rounded-full bg-calculation" />
+            </div>
+            <SecondaryButton to="/plan" className="mt-4 w-full px-4 py-2">
+              {t('home.adjustToday')}
+            </SecondaryButton>
+          </section>
+        </aside>
+        </div>
+
+        <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <article className="rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card">
+              <div className="flex items-center justify-between">
+                <Tag type="info">{t('home.recentReview')}</Tag>
+                <Tag type="warning">{t('home.recentTag')}</Tag>
+              </div>
+              <h2 className="mt-4 text-xl font-semibold text-ink">
+                {t('home.recentTitle')}
+              </h2>
+              <p className="mt-3 rounded-2xl bg-accent-focus px-4 py-3 text-sm font-normal leading-6 text-ink/62">
+                {t('home.recentDesc')}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <SecondaryButton to="/diagnosis">{t('home.viewReview')}</SecondaryButton>
+                <PrimaryButton to="/practice">{t('home.practiceAgain')}</PrimaryButton>
+              </div>
+            </article>
+
+            <article className="rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card">
+              <div className="flex items-center justify-between">
+                <Tag type="neutral">{t('home.reviewMistakes')}</Tag>
+                <SecondaryButton to="/mistakes" className="px-4 py-2">
+                  {t('common.viewAll')}
+                </SecondaryButton>
+              </div>
+              <div className="mt-4 space-y-2">
+                {reviewMistakes.map(([title, reason, action]) => (
+                  <div
+                    className="grid grid-cols-1 gap-2 rounded-2xl bg-chalk px-4 py-3 sm:grid-cols-[1fr_78px_88px] sm:items-center"
+                    key={title}
+                  >
+                    <p className="text-sm font-semibold text-ink">{title}</p>
+                    <p className="text-xs font-medium text-ink/50">{reason}</p>
+                    <p className="text-xs font-medium text-ink/62">{action}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </section>
+      </div>
+
+      {isAdjustOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/18 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-[440px] rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-[0_22px_60px_rgba(47,52,59,0.18)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Tag type="info">{t('home.modalTag')}</Tag>
+                <h2 className="mt-3 text-xl font-semibold text-ink">
+                  {t('home.modalTitle')}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-ink/55">
+                  {t('home.modalDesc')}
+                </p>
+              </div>
+              <button
+                className="grid h-9 w-9 place-items-center rounded-full border border-ink/8 bg-chalk text-sm font-medium text-ink/45 hover:text-ink"
+                onClick={() => setIsAdjustOpen(false)}
+                type="button"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-2">
+              {adjustmentOptions.map((option) => (
+                <button
+                  className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
+                    selectedAdjustment === option
+                      ? 'border-calculation/45 bg-accent-action text-ink'
+                      : 'border-ink/8 bg-white text-ink/58 hover:bg-chalk'
+                  }`}
+                  key={option}
+                  onClick={() => setSelectedAdjustment(option)}
+                  type="button"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-3">
+              <SecondaryButton onClick={() => setIsAdjustOpen(false)}>
+                {t('home.originalPlan')}
+              </SecondaryButton>
+              <PrimaryButton onClick={() => setIsAdjustOpen(false)}>
+                {t('home.confirmAdjust')}
+              </PrimaryButton>
             </div>
           </div>
         </div>
-
-        <article className="rounded-[2rem] border border-ink/10 bg-white p-7 shadow-card">
-          <div className="flex items-start justify-between gap-5">
-            <div>
-              <Tag type="warning">今日学习建议</Tag>
-              <h2 className="mt-4 font-display text-[26px] font-semibold text-ink">
-                先稳住条件转化，再进入建模
-              </h2>
-              <p className="mt-3 max-w-3xl rounded-2xl bg-accent-focus px-4 py-3 text-[15px] font-normal leading-7 text-ink/64">
-                你最近在“一次函数应用题”中，主要卡在“条件转化”和“建立模型”。
-              </p>
-            </div>
-            <AbilityMascot ability="translation" size="card" />
-            <div className="rounded-[1.5rem] bg-accent-warning px-4 py-3 text-center">
-              <p className="text-xs font-medium text-honey/75">预计用时</p>
-              <p className="font-display text-2xl font-semibold text-honey">35 min</p>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            {[
-              ['1', '复习 2 道旧错题', '先找回上次卡住的位置', 'bg-white text-ink'],
-              ['2', '完成 3 道条件转化训练', '把文字条件变成函数表达式', 'bg-accent-focus text-ink'],
-              ['3', '做 1 道变式挑战题', '看能不能迁移到新情境', 'bg-accent-warning text-ink'],
-            ].map(([step, title, desc, tone]) => (
-              <div className="rounded-[1.5rem] border border-ink/5 bg-white p-4" key={title}>
-                <span
-                  className={`grid h-9 w-9 place-items-center rounded-full text-sm font-medium ${tone}`}
-                >
-                  {step}
-                </span>
-                <p className="mt-4 text-base font-semibold text-ink">{title}</p>
-                <p className="mt-2 text-sm font-normal leading-6 text-ink/56">
-                  {desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-7 flex gap-3">
-            <PrimaryButton to="/practice">开始今日练习</PrimaryButton>
-            <SecondaryButton to="/plan">查看计划依据</SecondaryButton>
-          </div>
-        </article>
-
-        <article className="rounded-[2rem] border border-ink/10 bg-white p-7 shadow-card">
-          <div className="flex items-center justify-between">
-            <Tag type="info">最近一次诊断</Tag>
-            <Tag type="warning">L2 初步掌握</Tag>
-          </div>
-
-          <div className="mt-5 grid grid-cols-[1fr_260px] gap-5">
-            <div>
-              <div className="flex items-center gap-3">
-                <AbilityMascot ability="translation" size="inline" />
-                <h2 className="font-display text-[24px] font-semibold text-ink">
-                  一次函数实际应用题
-                </h2>
-              </div>
-              <p className="mt-4 rounded-[1.5rem] bg-accent-focus p-4 text-[15px] font-normal leading-7 text-ink/64">
-                建议：先练“文字条件 → 函数表达式”。这题不是不会函数，而是文字条件拐进表达式时少了一步。
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="rounded-[1.25rem] border border-ink/5 bg-white p-4">
-                <p className="text-xs font-medium text-ink/42">主要错因</p>
-                <p className="mt-1 text-base font-semibold text-ink">条件转化错误</p>
-              </div>
-              <div className="rounded-[1.25rem] bg-accent-warning p-4">
-                <p className="text-xs font-medium text-honey/75">断链步骤</p>
-                <p className="mt-1 text-base font-semibold text-ink">第 2 步 - 条件转化</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-7 flex gap-3">
-            <SecondaryButton to="/diagnosis">查看完整诊断</SecondaryButton>
-            <PrimaryButton to="/practice" variant="sun">
-              再做一道类似题
-            </PrimaryButton>
-          </div>
-        </article>
-
-        <section className="rounded-[2rem] border border-ink/10 bg-white p-7 shadow-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <Tag type="neutral">待复习错题</Tag>
-              <h2 className="mt-4 font-display text-[24px] font-semibold text-ink">
-                今天建议先回看这 3 张卡
-              </h2>
-            </div>
-            <SecondaryButton to="/mistakes">进入错题本</SecondaryButton>
-          </div>
-
-          <div className="mt-6 space-y-3">
-            {reviewMistakes.map((item) => (
-              <div
-                className="grid grid-cols-[1.1fr_0.9fr_120px_110px] items-center gap-4 rounded-[1.35rem] border border-ink/5 bg-white p-4"
-                key={item.title}
-              >
-                <p className="text-base font-semibold text-ink">{item.title}</p>
-                <p className="font-semibold text-ink/56">{item.reason}</p>
-                <p className="text-sm font-medium text-ink/42">{item.time}</p>
-                <Tag type={item.type}>{item.status}</Tag>
-              </div>
-            ))}
-          </div>
-        </section>
-      </section>
-
-      <aside className="space-y-6 self-start">
-        <section className="rounded-[2rem] border border-ink/10 bg-white p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <Tag type="info">六维能力</Tag>
-            <span className="rounded-full bg-meadow px-3 py-1 text-xs font-medium text-leaf">
-              本周
-            </span>
-          </div>
-          <div className="mt-6 space-y-4">
-            {abilityScores.map((item) => (
-              <div key={item.name}>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-sm font-medium text-ink">
-                    <AbilityMascot ability={item.ability} size="tiny" />
-                    {item.name}
-                  </span>
-                  <span className="font-display text-xl font-semibold text-ink">
-                    {item.score}
-                  </span>
-                </div>
-                <div className="h-2.5 rounded-full bg-chalk">
-                  <div
-                    className="h-2.5 rounded-full"
-                    style={{
-                      width: `${item.score}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 rounded-[1.5rem] bg-accent-focus p-4 text-sm font-normal leading-6 text-ink/64">
-            当前最需要提升：条件转化、复核检查。
-          </p>
-        </section>
-
-        <section className="rounded-[2rem] border border-ink/10 bg-white p-6 shadow-card">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Tag type="warning">考试倒计时</Tag>
-              <h2 className="mt-5 font-display text-[28px] font-semibold text-ink">
-                7 天后
-              </h2>
-              <p className="mt-2 font-medium text-ink/65">下次数学考试</p>
-            </div>
-            <AbilityMascot ability="review" size="inline" />
-          </div>
-          <div className="mt-5 rounded-[1.5rem] bg-chalk p-4">
-            <p className="text-sm font-medium text-ink/42">考试范围</p>
-            <p className="mt-1 font-semibold leading-7 text-ink/70">
-              一次函数、二元一次方程组
-            </p>
-          </div>
-          <p className="mt-5 text-sm font-semibold leading-6 text-ink/60">
-            建议：优先复习 L2 和 L3 错题。
-          </p>
-        </section>
-
-        <section className="rounded-[2rem] border border-ink/10 bg-white p-6 text-center shadow-card">
-          <div className="mx-auto w-fit rounded-[2rem] bg-accent-action p-3">
-            +
-          </div>
-          <h2 className="mt-5 font-display text-xl font-semibold">快捷上传</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-ink/56">
-            遇到新卡点，直接丢进诊断任务里。
-          </p>
-          <PrimaryButton to="/upload" className="mt-6 w-full">
-            上传一道错题
-          </PrimaryButton>
-        </section>
-      </aside>
-    </div>
+      ) : null}
+    </>
   );
 }

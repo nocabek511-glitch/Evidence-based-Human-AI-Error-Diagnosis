@@ -16,7 +16,7 @@
 }
 
 body {
-  min-width: 1180px;
+  min-width: 0;
   min-height: 100vh;
   margin: 0;
   font-family:
@@ -24,6 +24,10 @@ body {
     'Noto Sans CJK SC',
     'Microsoft YaHei',
     sans-serif;
+}
+
+.lang-en {
+  line-height: 1.55;
 }
 
 button,

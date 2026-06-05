@@ -15,7 +15,7 @@ export default function SecondaryButton({
   disabled,
   ...buttonProps
 }: SecondaryButtonProps) {
-  const classes = `inline-flex items-center justify-center rounded-full border border-ink/10 bg-white px-5 py-2.5 text-sm font-medium text-ink shadow-[0_4px_14px_rgba(47,52,59,0.035)] transition duration-200 hover:-translate-y-0.5 hover:bg-chalk active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-review disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
+  const classes = `inline-flex min-w-fit items-center justify-center rounded-full border border-ink/10 bg-white px-5 py-2.5 text-center text-sm font-medium leading-5 text-ink shadow-[0_4px_14px_rgba(47,52,59,0.035)] transition duration-200 hover:-translate-y-0.5 hover:bg-chalk active:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-review disabled:cursor-not-allowed disabled:opacity-60 ${className}`;
 
   if (to) {
     return (
