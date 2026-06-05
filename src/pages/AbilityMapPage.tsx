@@ -218,17 +218,26 @@ const learnerProfile: LearnerProfile = {
   },
 };
 
-type NegotiationPhase = 'basis' | 'validation' | 'result';
+type NegotiationPhase =
+  | 'basis'
+  | 'understood'
+  | 'evidence'
+  | 'validation'
+  | 'result';
 
 type ResultSource = 'validation' | 'explanation' | 'record';
 
-const objectionOptions = [
-  '我其实会，只是这题失误',
-  'AI 看错了我的步骤',
-  '我最近已经练会了',
-  '这个错因更像计算问题',
-  '我想直接做小验证',
-];
+type ScoreUpdate = {
+  abilityId: string;
+  oldScore: number;
+  newScore: number;
+  delta: number;
+  correctCount: number;
+  totalCount: number;
+  newStatus: string;
+  message: string;
+  nextStep: string;
+};
 
 const validationTasks = [
   {
@@ -399,9 +408,10 @@ export default function AbilityMapPage() {
     useState<ProfileDimension | null>(null);
   const [negotiationPhase, setNegotiationPhase] =
     useState<NegotiationPhase>('basis');
-  const [objectionType, setObjectionType] = useState('');
   const [explanationText, setExplanationText] = useState('');
+  const [evidenceText, setEvidenceText] = useState('');
   const [evidenceHint, setEvidenceHint] = useState('');
+  const [basisOpen, setBasisOpen] = useState(false);
   const [resultSource, setResultSource] = useState<ResultSource>('validation');
   const [validationRound, setValidationRound] = useState<1 | 2>(1);
   const [validationResults, setValidationResults] = useState<boolean[]>([
@@ -409,29 +419,40 @@ export default function AbilityMapPage() {
     false,
     false,
   ]);
+  const [scoreUpdates, setScoreUpdates] = useState<Record<string, ScoreUpdate>>(
+    {},
+  );
 
   const dimensionGroups = learnerProfile.dimensionGroups;
   const dimensions = dimensionGroups.flatMap((group) => group.items);
   const focusDimension = dimensions[0];
+  const getDisplayScore = (dimension: ProfileDimension) =>
+    scoreUpdates[dimension.id]?.newScore ?? dimension.score;
+  const getDisplayTrend = (dimension: ProfileDimension) =>
+    scoreUpdates[dimension.id]?.delta > 0
+      ? `${scoreUpdates[dimension.id].oldScore} → ${scoreUpdates[dimension.id].newScore}`
+      : dimension.trend;
+  const getDisplayProgress = (dimension: ProfileDimension) =>
+    getDisplayScore(dimension) / 100;
+  const displayRadarData = radarData.map((item) =>
+    item.label === '条件转化'
+      ? {
+          ...item,
+          value: scoreUpdates.condition_translation?.newScore ?? item.value,
+        }
+      : item,
+  );
 
   const openChallenge = (dimension: ProfileDimension) => {
     setChallengeTarget(dimension);
     setNegotiationPhase('basis');
-    setObjectionType('');
     setExplanationText('');
+    setEvidenceText('');
     setEvidenceHint('');
+    setBasisOpen(false);
     setResultSource('validation');
     setValidationRound(1);
     setValidationResults([false, false, false]);
-  };
-
-  const chooseObjection = (option: string) => {
-    setObjectionType(option);
-    setEvidenceHint('');
-    if (option === '我想直接做小验证') {
-      startValidation(1);
-      return;
-    }
   };
 
   const startValidation = (round: 1 | 2 = 1) => {
@@ -442,12 +463,19 @@ export default function AbilityMapPage() {
     setNegotiationPhase('validation');
   };
 
+  const submitInitialIdea = () => {
+    const idea = explanationText.trim();
+    if (!idea) {
+      setEvidenceHint('先说一句你觉得哪里不合理，系统才能重新看。');
+      return;
+    }
+    setEvidenceHint('');
+    setNegotiationPhase('understood');
+  };
+
   const submitEvidenceExplanation = () => {
-    const evidenceText = `${objectionType} ${explanationText}`.trim();
-    if (
-      evidenceText.length < 10 ||
-      /我觉得不是|不准|不是/.test(evidenceText)
-    ) {
+    const evidence = evidenceText.trim();
+    if (evidence.length < 10 || /我觉得不是|不准|不是/.test(evidence)) {
       setEvidenceHint(coachCopy.negotiation.needsEvidence);
       return;
     }
@@ -465,69 +493,117 @@ export default function AbilityMapPage() {
   const passedCount = validationResults.filter(Boolean).length;
   const currentValidationTasks =
     validationRound === 1 ? validationTasks : advancedValidationTasks;
+  const getMiniCheckResult = (
+    dimension: ProfileDimension | null,
+    correctCount: number,
+  ): ScoreUpdate => {
+    const oldScore = dimension ? getDisplayScore(dimension) : 58;
+    const delta = correctCount >= 3 ? 2 : correctCount === 2 ? 1 : 0;
+    const newScore = Math.min(100, oldScore + delta);
+    const abilityName = dimension?.name ?? '条件转化';
+    const newStatus =
+      correctCount >= 3
+        ? '正在变稳'
+        : correctCount === 2
+          ? '待观察'
+          : correctCount === 1
+            ? '继续观察'
+            : '继续重点练';
+    const message =
+      correctCount >= 3
+        ? `你这次 3 个小任务都做对了。系统会先给「${abilityName}」小幅加分，并把这次表现加入记录。`
+        : correctCount === 2
+          ? '你这次大部分做对了，但还不算完全稳定。系统会先小幅更新，并继续观察后面的同类题。'
+          : correctCount === 1
+            ? '这次还不够稳定，系统先不改分数。可以再练一小组，再回来验证。'
+            : '这一步还需要再补。先练几道“把题里的话写成式子”的小任务，再回来验证。';
+    const nextStep =
+      correctCount >= 2
+        ? '再做 1–2 道同类题，如果继续稳定，系统会继续更新画像。'
+        : '先做一小组条件转写练习，再回来验证会更稳。';
+
+    return {
+      abilityId: dimension?.id ?? 'condition_translation',
+      oldScore,
+      newScore,
+      delta,
+      correctCount,
+      totalCount: 3,
+      newStatus,
+      message,
+      nextStep,
+    };
+  };
+  const miniCheckResult =
+    resultSource === 'validation'
+      ? challengeTarget
+        ? scoreUpdates[challengeTarget.id] ??
+          getMiniCheckResult(challengeTarget, passedCount)
+        : getMiniCheckResult(null, passedCount)
+      : null;
 
   const validationOutcome = useMemo(() => {
     if (resultSource !== 'validation') {
       return {
-        resultLine: '说明已进入重新确认',
-        updateLine: '临时记录：先保留原判断，加入后续观察',
+        resultLine: '你补充的信息有用',
+        updateLine: '状态更新：先标记为“正在变稳”',
         reason:
           resultSource === 'record'
-            ? '这次先保存你的异议。后续同类练习里，系统会继续看你是否能稳定完成这一步。'
-            : '你补充了自己的思路，系统会重点检查这一步的依据；如果后续表现稳定，再做小幅调整。',
+            ? '这次先保存你的想法。后续同类练习里，系统会继续看你是否能稳定完成这一步。'
+            : '系统会把这次表现加入记录。长期画像不会因为一次说明大幅变化，但后续同类题会更快更新。',
       };
     }
 
     if (validationRound === 2) {
       if (passedCount >= 3) {
         return {
-          resultLine: '进阶验证结果：3 / 3 通过',
-          updateLine: '临时调整：条件转化 68 → 72',
+          resultLine: '小验证结果：正在变稳',
+          updateLine: '状态更新：进阶验证也比较稳定',
           reason:
-            '你在更换题面后仍能稳定找到变化量、写出关系式并解释理由。系统会先做第二次临时上调，后续还要看真实练习是否继续稳定。',
+            '你在更换题面后仍能找到变化量、写出关系式并解释理由。系统会先把这次表现加入记录，后续还要看真实练习是否继续稳定。',
         };
       }
 
       if (passedCount === 2) {
         return {
-          resultLine: '进阶验证结果：2 / 3 通过',
-          updateLine: '临时调整：条件转化 68 → 70',
+          resultLine: '小验证结果：待观察',
+          updateLine: '状态更新：有进步，但还要再看',
           reason:
-            '这轮表现比原判断更稳定，但解释环节还需要继续确认。系统先小幅上调，后面会结合真实错题继续看。',
+            '这轮表现比原判断更稳定，但解释环节还需要继续确认。系统会结合后续真实错题继续看。',
         };
       }
 
       return {
-        resultLine: `进阶验证结果：${passedCount} / 3 通过`,
-        updateLine: '临时记录：维持 68',
+        resultLine: '小验证结果：继续重点练',
+        updateLine: '状态更新：先不调整长期画像',
         reason:
-          '这轮证据还不足以继续上调，但前一轮的临时调整会保留。建议先把条件转化微练习做稳，再重新确认。',
+          '这轮证据还不足以说明已经稳定。建议先把条件转化微练习做稳，再重新确认。',
       };
     }
 
     if (passedCount >= 3) {
       return {
-        resultLine: '验证结果：3 / 3 通过',
-        updateLine: '临时调整：条件转化 62 → 68',
+        resultLine: '小验证结果：正在变稳',
+        updateLine: '状态更新：先标记为“正在变稳”',
         reason:
-          '你在条件提取、关系式转化和解释题中都表现稳定，说明原判断需要修正。后续如果继续稳定通过，系统会把临时调整转为稳定画像。',
+          '你在条件提取、关系式转化和解释题中都表现稳定。系统会先把这次表现加入记录，后续如果继续稳定，会更新为更稳定的画像。',
       };
     }
 
     if (passedCount === 2) {
       return {
-        resultLine: '验证结果：2 / 3 通过',
-        updateLine: '临时调整：条件转化 62 → 65',
+        resultLine: '小验证结果：待观察',
+        updateLine: '状态更新：有一部分表现变稳',
         reason:
-          '你能完成基础题和同类变式，说明原判断可能偏低；但系统还需要在后续练习中继续确认，所以暂时只做小幅调整。',
+          '你能完成部分微任务，说明这个判断可以继续看。系统先记录这次表现，后续练习会继续确认。',
       };
     }
 
     return {
-      resultLine: `验证结果：${passedCount} / 3 通过`,
-      updateLine: '临时记录：暂不调整分数',
+      resultLine: '小验证结果：继续重点练',
+      updateLine: '状态更新：暂不调整长期画像',
       reason:
-        '你的质疑会被保留，但目前证据还不足以推翻原判断。建议先完成 2 道条件转化微练习，再重新验证。',
+        '你的想法会被保留，但目前证据还不够支持更新判断。建议先完成 2 道条件转化微练习，再重新确认。',
     };
   }, [passedCount, resultSource, validationRound]);
 
@@ -581,7 +657,7 @@ export default function AbilityMapPage() {
         <section className="rounded-[1.75rem] border border-ink/10 bg-white p-5 shadow-card">
           <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[240px_minmax(0,1fr)]">
             <div className="rounded-[1.5rem] bg-chalk px-3 py-4">
-              <MiniRadar data={radarData} />
+              <MiniRadar data={displayRadarData} />
             </div>
             <div>
               <Tag type="neutral">六维总览</Tag>
@@ -589,7 +665,7 @@ export default function AbilityMapPage() {
                 {radarSummary}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {radarData.map((item) => (
+                {displayRadarData.map((item) => (
                   <div
                     className="rounded-2xl border border-ink/8 bg-white px-3 py-2"
                     key={item.label}
@@ -646,6 +722,10 @@ export default function AbilityMapPage() {
                 <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                   {group.items.map((dimension) => {
                     const meta = abilityMascots[dimension.ability];
+                    const update = scoreUpdates[dimension.id];
+                    const displayScore = getDisplayScore(dimension);
+                    const displayTrend = getDisplayTrend(dimension);
+                    const displayProgress = getDisplayProgress(dimension);
                     const cardStyle = dimension.highlighted
                       ? {
                           backgroundColor: meta.lightColor,
@@ -689,7 +769,7 @@ export default function AbilityMapPage() {
                             </div>
                           </div>
                           <p className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-ink/38">
-                            {dimension.score} · {dimension.trend}
+                            {displayScore} · {displayTrend}
                           </p>
                         </div>
 
@@ -702,10 +782,18 @@ export default function AbilityMapPage() {
                             className="h-full rounded-full"
                             style={{
                               backgroundColor: meta.color,
-                              width: progressWidth(dimension.progress * 100),
+                              width: progressWidth(displayProgress * 100),
                             }}
                           />
                         </div>
+
+                        {update ? (
+                          <div className="mt-3 inline-flex rounded-full bg-accent-action px-3 py-1 text-xs font-semibold text-ink/68">
+                            {update.delta > 0
+                              ? `刚刚 +${update.delta}`
+                              : '刚刚验证'}
+                          </div>
+                        ) : null}
 
                         <div className="mt-4 flex flex-wrap gap-2">
                           <button
@@ -814,7 +902,7 @@ export default function AbilityMapPage() {
           <aside className="flex h-full w-full max-w-[500px] flex-col border-l border-ink/10 bg-white shadow-[0_22px_60px_rgba(47,52,59,0.18)]">
             <div className="flex items-start justify-between gap-4 border-b border-ink/8 px-5 py-5">
               <div>
-                <Tag type="info">重新确认</Tag>
+                <Tag type="info">重新看看</Tag>
                 <h2 className="mt-3 text-xl font-semibold text-ink">
                   {coachCopy.negotiation.title}
                 </h2>
@@ -833,7 +921,7 @@ export default function AbilityMapPage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
               <div className="flex items-center gap-2 rounded-full bg-chalk px-3 py-2">
-                {['判断依据', '补充证据', '临时更新'].map((step, index) => (
+                {['说想法', '补依据或验证', '反馈'].map((step, index) => (
                   <div className="flex min-w-0 flex-1 items-center gap-2" key={step}>
                     <span
                       className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${
@@ -856,64 +944,123 @@ export default function AbilityMapPage() {
               </div>
 
               {negotiationPhase === 'basis' ? (
-                <>
-                  <section className="mt-5 rounded-[1.5rem] border border-ink/8 bg-white p-4 shadow-[0_8px_24px_rgba(47,52,59,0.035)]">
-                    <p className="text-xs font-medium text-ink/38">
-                      关于：{challengeTarget.name} · 当前 62 · 系统有多确定：中等
-                    </p>
-                    <p className="mt-3 text-base font-semibold text-ink">
-                      {coachCopy.negotiation.basisTitle}
-                    </p>
-                    <div className="mt-3 space-y-2">
-                      {basisEvidence.map((item, index) => (
-                        <p
-                          className="rounded-2xl bg-chalk/75 px-3 py-3 text-sm leading-6 text-ink/62"
-                          key={item}
-                        >
-                          {index + 1}. {item}
-                        </p>
-                      ))}
+                <section className="mt-5 rounded-[1.5rem] border border-ink/8 bg-white p-4 shadow-[0_8px_24px_rgba(47,52,59,0.035)]">
+                  <p className="text-sm font-semibold text-ink">
+                    {coachCopy.negotiation.ideaLabel}
+                  </p>
+                  <textarea
+                    className="mt-3 min-h-36 w-full resize-none rounded-[1.25rem] border border-ink/10 bg-chalk px-4 py-3 text-sm leading-7 text-ink outline-none transition placeholder:text-ink/35 focus:border-calculation focus:bg-white focus:ring-4 focus:ring-calculation/15"
+                    onChange={(event) => {
+                      setExplanationText(event.target.value);
+                      setEvidenceHint('');
+                    }}
+                    placeholder={coachCopy.negotiation.ideaPlaceholder}
+                    value={explanationText}
+                  />
+
+                  {evidenceHint ? (
+                    <div className="mt-3 rounded-[1.25rem] border border-model/25 bg-accent-warning/70 px-4 py-3 text-sm leading-6 text-ink/62">
+                      {evidenceHint}
                     </div>
-                  </section>
+                  ) : null}
 
-                  <section className="mt-5">
-                    <p className="mb-2 text-xs font-medium text-ink/42">
-                      {coachCopy.negotiation.reasonPrompt}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {objectionOptions.map((option) => (
-                        <button
-                          className={`rounded-full border px-3.5 py-2 text-xs font-medium transition hover:-translate-y-0.5 hover:border-calculation/35 hover:bg-accent-action hover:text-ink ${
-                            objectionType === option
-                              ? 'border-calculation/35 bg-accent-action text-ink'
-                              : 'border-ink/10 bg-white text-ink/58'
-                          }`}
-                          key={option}
-                          onClick={() => chooseObjection(option)}
-                          type="button"
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
+                  <button
+                    className="mt-4 text-sm font-medium text-ink/45 underline decoration-ink/20 underline-offset-4 hover:text-ink"
+                    onClick={() => setBasisOpen((value) => !value)}
+                    type="button"
+                  >
+                    {basisOpen ? '收起系统依据' : '查看系统依据'}
+                  </button>
 
-                    <textarea
-                      className="mt-4 min-h-24 w-full resize-none rounded-[1.25rem] border border-ink/10 bg-chalk px-4 py-3 text-sm leading-7 text-ink outline-none transition placeholder:text-ink/35 focus:border-calculation focus:bg-white focus:ring-4 focus:ring-calculation/15"
-                      onChange={(event) => {
-                        setExplanationText(event.target.value);
-                        setEvidenceHint('');
-                      }}
-                      placeholder={coachCopy.negotiation.reasonPlaceholder}
-                      value={explanationText}
-                    />
-
-                    {evidenceHint ? (
-                      <div className="mt-4 rounded-[1.25rem] border border-model/25 bg-accent-warning/70 px-4 py-3 text-sm leading-6 text-ink/62">
-                        {evidenceHint}
+                  {basisOpen ? (
+                    <div className="mt-3 rounded-[1.25rem] border border-ink/8 bg-chalk/65 px-4 py-3">
+                      <p className="text-xs font-medium text-ink/38">
+                        关于：{challengeTarget.name} · 当前 62 · 系统有多确定：中等
+                      </p>
+                      <p className="mt-3 text-sm font-semibold text-ink">
+                        系统目前看到
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {basisEvidence.map((item, index) => (
+                          <p
+                            className="rounded-2xl bg-white px-3 py-3 text-sm leading-6 text-ink/62"
+                            key={item}
+                          >
+                            {index + 1}. {item}
+                          </p>
+                        ))}
                       </div>
-                    ) : null}
-                  </section>
-                </>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
+              {negotiationPhase === 'understood' ? (
+                <section className="mt-5 space-y-4">
+                  <div className="rounded-[1.5rem] rounded-tl-sm bg-accent-focus px-4 py-3 text-sm leading-7 text-ink/68">
+                    <p className="font-medium text-ink">我理解你的意思是：</p>
+                    <p className="mt-1">
+                      “你觉得【{challengeTarget.name}】这个判断需要重新看，因为：{explanationText.trim()}”
+                    </p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-ink/8 bg-white px-4 py-3 text-sm leading-7 text-ink/62">
+                    这个可以重新看。接下来你可以补充一点依据，或者做一个小验证。
+                  </div>
+
+                  <button
+                    className="text-sm font-medium text-ink/45 underline decoration-ink/20 underline-offset-4 hover:text-ink"
+                    onClick={() => setBasisOpen((value) => !value)}
+                    type="button"
+                  >
+                    {basisOpen ? '收起系统依据' : '查看系统依据'}
+                  </button>
+
+                  {basisOpen ? (
+                    <div className="rounded-[1.25rem] border border-ink/8 bg-chalk/65 px-4 py-3">
+                      <p className="text-xs font-medium text-ink/38">
+                        关于：{challengeTarget.name} · 当前 62 · 系统有多确定：中等
+                      </p>
+                      <p className="mt-3 text-sm font-semibold text-ink">
+                        系统目前看到
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {basisEvidence.map((item, index) => (
+                          <p
+                            className="rounded-2xl bg-white px-3 py-3 text-sm leading-6 text-ink/62"
+                            key={item}
+                          >
+                            {index + 1}. {item}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
+              {negotiationPhase === 'evidence' ? (
+                <section className="mt-5 rounded-[1.5rem] border border-ink/8 bg-white p-4 shadow-[0_8px_24px_rgba(47,52,59,0.035)]">
+                  <p className="text-base font-semibold text-ink">
+                    补充一点依据
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-ink/48">
+                    可以写系统漏看的地方，比如哪道题、哪一步、最近哪次练习表现。
+                  </p>
+                  <textarea
+                    className="mt-4 min-h-32 w-full resize-none rounded-[1.25rem] border border-ink/10 bg-chalk px-4 py-3 text-sm leading-7 text-ink outline-none transition placeholder:text-ink/35 focus:border-calculation focus:bg-white focus:ring-4 focus:ring-calculation/15"
+                    onChange={(event) => {
+                      setEvidenceText(event.target.value);
+                      setEvidenceHint('');
+                    }}
+                    placeholder="比如：第 8 题里我已经写出了销量关系，真正出错是在后面展开计算。"
+                    value={evidenceText}
+                  />
+                  {evidenceHint ? (
+                    <div className="mt-3 rounded-[1.25rem] border border-model/25 bg-accent-warning/70 px-4 py-3 text-sm leading-6 text-ink/62">
+                      {evidenceHint}
+                    </div>
+                  ) : null}
+                </section>
               ) : null}
 
               {negotiationPhase === 'validation' ? (
@@ -993,21 +1140,71 @@ export default function AbilityMapPage() {
 
               {negotiationPhase === 'result' ? (
                 <section className="mt-5 rounded-[1.5rem] border border-calculation/20 bg-accent-action/70 p-4">
-                  <Tag type="success">临时更新</Tag>
-                  <h3 className="mt-3 text-lg font-semibold text-ink">
-                    {validationOutcome.resultLine}
-                  </h3>
-                  <p className="mt-3 rounded-2xl bg-white/75 px-4 py-3 text-sm font-semibold leading-6 text-ink/72">
-                    {validationOutcome.updateLine}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-ink/62">
-                    {validationOutcome.reason}
-                  </p>
-                  {validationRound === 1 ? (
-                    <p className="mt-3 rounded-2xl bg-white/60 px-4 py-3 text-sm leading-6 text-ink/58">
-                      如果你觉得这一步还可以更稳，可以继续做一轮稍难一点的小验证。
-                    </p>
-                  ) : null}
+                  {miniCheckResult ? (
+                    <>
+                      <Tag type="success">小验证结果</Tag>
+                      <div className="mt-4 rounded-[1.35rem] bg-white/80 px-4 py-4">
+                        <div className="flex flex-wrap items-end justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-ink/48">
+                              {challengeTarget?.name ?? '条件转化'}
+                            </p>
+                            <p className="mt-2 text-[32px] font-semibold leading-none tracking-tight text-ink">
+                              {miniCheckResult.oldScore}
+                              <span className="mx-2 text-ink/28">→</span>
+                              {miniCheckResult.newScore}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-accent-action px-3 py-1.5 text-sm font-semibold text-ink/70">
+                            {miniCheckResult.delta > 0
+                              ? `+${miniCheckResult.delta}`
+                              : '暂不加分'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="rounded-2xl bg-white/65 px-4 py-3">
+                          <p className="text-xs font-medium text-ink/38">
+                            本次小验证
+                          </p>
+                          <p className="mt-1 text-lg font-semibold text-ink">
+                            {miniCheckResult.correctCount}/
+                            {miniCheckResult.totalCount}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl bg-white/65 px-4 py-3">
+                          <p className="text-xs font-medium text-ink/38">状态</p>
+                          <p className="mt-1 text-lg font-semibold text-ink">
+                            {miniCheckResult.newStatus}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="mt-3 text-sm leading-7 text-ink/62">
+                        {miniCheckResult.message}
+                      </p>
+                      <p className="mt-3 rounded-2xl bg-white/60 px-4 py-3 text-sm leading-6 text-ink/58">
+                        长期画像不会因为一次小验证大幅变化，但这次表现会加入记录。
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-ink/62">
+                        {miniCheckResult.nextStep}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Tag type="success">临时更新</Tag>
+                      <h3 className="mt-3 text-lg font-semibold text-ink">
+                        {validationOutcome.resultLine}
+                      </h3>
+                      <p className="mt-3 rounded-2xl bg-white/75 px-4 py-3 text-sm font-semibold leading-6 text-ink/72">
+                        {validationOutcome.updateLine}
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-ink/62">
+                        {validationOutcome.reason}
+                      </p>
+                    </>
+                  )}
                 </section>
               ) : null}
             </div>
@@ -1016,11 +1213,41 @@ export default function AbilityMapPage() {
               {negotiationPhase === 'basis' ? (
                 <div className="flex flex-wrap justify-end gap-3">
                   <SecondaryButton onClick={closeChallenge}>先返回</SecondaryButton>
-                  <SecondaryButton onClick={submitEvidenceExplanation}>
-                    提交说明
+                  <PrimaryButton onClick={submitInitialIdea}>
+                    提交想法
+                  </PrimaryButton>
+                </div>
+              ) : null}
+
+              {negotiationPhase === 'understood' ? (
+                <div className="flex flex-wrap justify-end gap-3">
+                  <SecondaryButton onClick={closeChallenge}>先返回</SecondaryButton>
+                  <SecondaryButton
+                    onClick={() => {
+                      setEvidenceHint('');
+                      setNegotiationPhase('evidence');
+                    }}
+                  >
+                    补充依据
                   </SecondaryButton>
                   <PrimaryButton onClick={() => startValidation(1)}>
                     做小验证
+                  </PrimaryButton>
+                </div>
+              ) : null}
+
+              {negotiationPhase === 'evidence' ? (
+                <div className="flex flex-wrap justify-end gap-3">
+                  <SecondaryButton
+                    onClick={() => {
+                      setEvidenceHint('');
+                      setNegotiationPhase('understood');
+                    }}
+                  >
+                    返回上一步
+                  </SecondaryButton>
+                  <PrimaryButton onClick={submitEvidenceExplanation}>
+                    提交依据
                   </PrimaryButton>
                 </div>
               ) : null}
@@ -1029,15 +1256,25 @@ export default function AbilityMapPage() {
                 <div className="flex flex-wrap justify-end gap-3">
                   <SecondaryButton
                     onClick={() => {
-                      setNegotiationPhase('basis');
+                      setNegotiationPhase('understood');
                       setEvidenceHint('');
                     }}
                   >
-                    先返回
+                    返回上一步
                   </SecondaryButton>
                   <PrimaryButton
                     onClick={() => {
                       setResultSource('validation');
+                      if (challengeTarget) {
+                        const result = getMiniCheckResult(
+                          challengeTarget,
+                          passedCount,
+                        );
+                        setScoreUpdates((current) => ({
+                          ...current,
+                          [challengeTarget.id]: result,
+                        }));
+                      }
                       setNegotiationPhase('result');
                     }}
                   >
@@ -1048,16 +1285,30 @@ export default function AbilityMapPage() {
 
               {negotiationPhase === 'result' ? (
                 <div className="flex flex-wrap justify-end gap-3">
-                  <SecondaryButton to="/practice">去练这一块</SecondaryButton>
-                  <SecondaryButton onClick={closeChallenge}>
-                    返回我的进步
-                  </SecondaryButton>
-                  {validationRound === 1 ? (
-                    <PrimaryButton onClick={continueValidation}>
-                      {coachCopy.negotiation.continueValidation}
-                    </PrimaryButton>
+                  {resultSource === 'validation' ? (
+                    <>
+                      <SecondaryButton to="/practice">去练这一块</SecondaryButton>
+                      <SecondaryButton onClick={closeChallenge}>
+                        返回我的进步
+                      </SecondaryButton>
+                      {validationRound === 1 ? (
+                        <PrimaryButton onClick={continueValidation}>
+                          {coachCopy.negotiation.continueValidation}
+                        </PrimaryButton>
+                      ) : (
+                        <PrimaryButton onClick={closeChallenge}>完成确认</PrimaryButton>
+                      )}
+                    </>
                   ) : (
-                    <PrimaryButton onClick={closeChallenge}>完成确认</PrimaryButton>
+                    <>
+                      <SecondaryButton onClick={closeChallenge}>
+                        返回能力图
+                      </SecondaryButton>
+                      <SecondaryButton onClick={() => startValidation(1)}>
+                        做小验证
+                      </SecondaryButton>
+                      <PrimaryButton onClick={closeChallenge}>更新记录</PrimaryButton>
+                    </>
                   )}
                 </div>
               ) : null}

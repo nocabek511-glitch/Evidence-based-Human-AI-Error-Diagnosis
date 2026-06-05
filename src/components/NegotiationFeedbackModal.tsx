@@ -9,50 +9,50 @@ type FeedbackModalCopy = {
   reason: string;
   nextStep: string;
   primaryLabel: string;
-  secondaryLabel: string;
+  secondaryLabel?: string;
   evidenceDetail: string;
 };
 
 const feedbackCopy: Record<NegotiationFeedbackResultType, FeedbackModalCopy> = {
   supported: {
-    headline: '你这次补充得很关键，系统会把这题的主要卡点往后调整。',
+    headline: '这题记录好了',
     reason:
-      '你能说明关键关系已经写出来，所以这题不应主要卡在“条件写成式子”这一步。',
-    nextStep: '接下来先练后面的计算过程和检查。',
-    primaryLabel: '更新这题记录',
-    secondaryLabel: '返回原题',
+      '这题会改为：主断点：计算执行。',
+    nextStep: '系统会把后续练习调整到计算过程和结果检查。',
+    primaryLabel: '更新本题诊断',
+    secondaryLabel: '返回题目',
     evidenceDetail:
-      '你补充的关系式能说明你已经理解了售价和销量的变化，所以系统会把本题主要卡点调整到后面的计算步骤。',
+      '学生补充能说明关系式已经写对，后续计算更像独立出错，因此本题记录调整到计算执行。',
   },
   partiallySupported: {
-    headline: '你抓到了一部分问题，但这一步还没完全稳。',
+    headline: '这题记录好了',
     reason:
-      '你能找到关键条件，但把条件连成完整关系式时还有点不稳定。',
-    nextStep: '先练“条件 → 关系式 → 模型”之间的连接。',
-    primaryLabel: '练连接步骤',
-    secondaryLabel: '返回原题',
+      '这题会记为：主断点：条件转化；受影响步骤：计算执行。',
+    nextStep: '你提出的“后面计算也受影响”会一起记录进去。',
+    primaryLabel: '更新记录',
+    secondaryLabel: '返回题目',
     evidenceDetail:
-      '你的补充说明你看到了关键条件，但还需要把这个条件稳定地接到完整模型里。',
+      '后面计算确实受到影响，但最早开始偏的位置仍然是销量变化关系。',
   },
   notEnoughEvidence: {
-    headline: '你的想法可以继续查，但这次证据还不够支持改判。',
+    headline: '这题先这样记录',
     reason:
-      '从目前的作答看，你还是容易卡在“文字条件 → 数学关系”这一步。',
-    nextStep: '先别急着做完整题，先练 3 个条件转写小任务。',
-    primaryLabel: '去练这一块',
-    secondaryLabel: '返回修改',
+      '这次信息还不够支持改判。',
+    nextStep: '你可以回到题目继续补充，也可以先保留原判断。',
+    primaryLabel: '回到题目',
+    secondaryLabel: '返回题目',
     evidenceDetail:
-      '系统还没有看到足够证据说明关系式已经稳定写对，所以这题暂时保留原判断。',
+      '目前还看不到哪一步能说明关系式已经写对，所以暂时不调整本题主要卡点。',
   },
   observing: {
-    headline: '这次结果有点摇摆，系统先把你的补充记下来。',
+    headline: '这题记录好了',
     reason:
-      '你有些步骤做对了，但还不足以说明这个判断已经稳定。',
-    nextStep: '可以再做一道小验证，或者先回到原题修改。',
-    primaryLabel: '再做小验证',
-    secondaryLabel: '先回去修改',
+      '这题先保留原判断。',
+    nextStep:
+      '你的补充会被记入记录，后面如果同类题继续出现，系统会再更新。',
+    primaryLabel: '回到题目',
     evidenceDetail:
-      '这次补充会进入观察记录，后面结合更多错题和练习再更新。',
+      '本题仍先记为：主断点：条件转化；受影响步骤：计算执行。',
   },
 };
 
@@ -81,7 +81,7 @@ export default function NegotiationFeedbackModal({
       <section className="w-full max-w-[460px] rounded-[2rem] border border-ink/10 bg-white p-5 shadow-[0_22px_60px_rgba(47,52,59,0.18)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Tag type="info">系统重新看了一遍</Tag>
+            <Tag type="info">记录完成</Tag>
             <h2 className="mt-4 text-[22px] font-semibold leading-8 tracking-tight text-ink">
               {copy.headline}
             </h2>
@@ -97,11 +97,11 @@ export default function NegotiationFeedbackModal({
 
         <div className="mt-5 space-y-3">
           <div className="rounded-2xl bg-chalk px-4 py-3">
-            <p className="text-xs font-medium text-ink/38">为什么这样调整</p>
+            <p className="text-xs font-medium text-ink/38">本题记录</p>
             <p className="mt-1 text-sm leading-6 text-ink/62">{copy.reason}</p>
           </div>
           <div className="rounded-2xl bg-accent-action px-4 py-3">
-            <p className="text-xs font-medium text-ink/38">下一步建议</p>
+            <p className="text-xs font-medium text-ink/38">接下来</p>
             <p className="mt-1 text-sm leading-6 text-ink/68">{copy.nextStep}</p>
           </div>
         </div>
@@ -122,7 +122,11 @@ export default function NegotiationFeedbackModal({
         ) : null}
 
         <div className="mt-5 flex flex-wrap justify-end gap-3">
-          <SecondaryButton onClick={onSecondary}>{copy.secondaryLabel}</SecondaryButton>
+          {copy.secondaryLabel ? (
+            <SecondaryButton onClick={onSecondary}>
+              {copy.secondaryLabel}
+            </SecondaryButton>
+          ) : null}
           <PrimaryButton onClick={onPrimary}>{copy.primaryLabel}</PrimaryButton>
         </div>
       </section>

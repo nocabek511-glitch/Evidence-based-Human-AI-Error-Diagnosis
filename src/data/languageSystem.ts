@@ -40,14 +40,15 @@ export const coachCopy = {
     evidenceTitle: '系统这样判断，是因为',
   },
   negotiation: {
-    title: '我们重新确认这个判断',
+    title: '你觉得哪里不合理？',
     subtitle:
-      '你的质疑会被认真处理，但系统需要一点证据来决定是否更新学习画像。',
-    basisTitle: 'AI 当前依据',
-    reasonPrompt: '你想从哪个方向补充？',
-    reasonPlaceholder:
-      '也可以直接说说你的想法，例如：我最近几道同类题已经能先写出关系式了。',
-    needsEvidence: '可以，再补一句具体依据。比如：哪一步你已经写对了？',
+      '直接说你的想法就行。比如分数偏低，或者系统漏看了你最近的表现。',
+    basisTitle: '系统依据',
+    ideaLabel: '你的想法',
+    ideaPlaceholder:
+      '比如：我最近几道同类题已经能先写出关系式了，所以我觉得“条件转化”不该这么低。',
+    needsEvidence:
+      '可以，再补一句具体依据。比如哪道题、哪一步，或者最近哪次练习表现。',
     continueValidation: '继续验证',
   },
   plan: {

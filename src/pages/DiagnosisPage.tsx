@@ -384,13 +384,6 @@ export default function DiagnosisPage() {
           >
             {fullSolutionOpen ? '收起完整解法' : '看完整解法'}
           </button>
-          <button
-            className="rounded-full px-4 py-2 text-sm font-medium text-ink/48 transition hover:bg-chalk hover:text-ink"
-            onClick={() => setVerifyOpen(true)}
-            type="button"
-          >
-            做个小验证
-          </button>
         </div>
       </div>
 
@@ -461,7 +454,6 @@ export default function DiagnosisPage() {
         onPrimary={() => {
           if (feedbackResult === 'observing') {
             setFeedbackOpen(false);
-            setVerifyOpen(true);
             return;
           }
           handleUpdateRecord();

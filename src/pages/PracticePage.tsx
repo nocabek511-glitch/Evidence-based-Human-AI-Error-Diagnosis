@@ -260,7 +260,6 @@ export default function PracticePage() {
         currentJudgment={t('challengeDrawer.issueLabels.translation')}
         onClose={() => setEvidenceOpen(false)}
         onReadyToRejudge={() => setFeedbackVisible(true)}
-        onStartVerification={() => setMethodResultVisible(true)}
         open={evidenceOpen}
       />
 
