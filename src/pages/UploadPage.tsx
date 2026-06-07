@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AbilityMascot from '../components/AbilityMascot';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
@@ -14,7 +14,10 @@ const statusStyle: Record<PaperQuestion['status'], string> = {
 
 export default function UploadPage() {
   const navigate = useNavigate();
-  const [paperUploaded, setPaperUploaded] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [paperUploaded, setPaperUploaded] = useState(
+    searchParams.get('figmaState') === 'scan-result',
+  );
 
   const openQuestion = (questionId: string) => {
     navigate(`/diagnosis?question=${questionId}`);

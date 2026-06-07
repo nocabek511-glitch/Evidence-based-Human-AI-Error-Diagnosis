@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import AbilityMapPage from './pages/AbilityMapPage';
 import DiagnosisPage from './pages/DiagnosisPage';
+import FigmaRoutesPage from './pages/FigmaRoutesPage';
 import HomePage from './pages/HomePage';
 import MistakeBookPage from './pages/MistakeBookPage';
 import MistakeDetailPage from './pages/MistakeDetailPage';
@@ -12,6 +13,7 @@ import UploadPage from './pages/UploadPage';
 export default function App() {
   return (
     <Routes>
+      <Route path="figma-routes" element={<FigmaRoutesPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="dashboard" element={<HomePage />} />

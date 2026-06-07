@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AbilityMascot from '../components/AbilityMascot';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
@@ -6,12 +7,15 @@ import Tag from '../components/Tag';
 import { useLanguage } from '../i18n/LanguageContext';
 
 export default function HomePage() {
+  const [searchParams] = useSearchParams();
   const { t, tr } = useLanguage();
   const todayTasks = tr<[string, string, string][]>('home.tasks');
   const reviewMistakes = tr<[string, string, string][]>('home.mistakes');
   const adjustmentOptions = tr<string[]>('home.modalOptions');
   const statusItems = tr<[string, string][]>('home.statusItems');
-  const [isAdjustOpen, setIsAdjustOpen] = useState(false);
+  const [isAdjustOpen, setIsAdjustOpen] = useState(
+    searchParams.get('figmaState') === 'adjust-plan',
+  );
   const [selectedAdjustment, setSelectedAdjustment] = useState(
     adjustmentOptions[0],
   );

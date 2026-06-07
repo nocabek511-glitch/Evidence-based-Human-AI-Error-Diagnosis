@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AbilityMascot, { type Ability } from '../components/AbilityMascot';
+import FigmaAbilityStateDrawer, {
+  type FigmaAbilityState,
+} from '../components/FigmaAbilityStateDrawer';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import Tag from '../components/Tag';
@@ -402,6 +406,16 @@ function MiniRadar({ data }: { data: RadarDatum[] }) {
 }
 
 export default function AbilityMapPage() {
+  const [searchParams] = useSearchParams();
+  const requestedFigmaState = searchParams.get('figmaState');
+  const figmaState = (
+    [
+      'negotiation-basis',
+      'negotiation-validation',
+      'negotiation-result',
+      'negotiation-continue',
+    ] as FigmaAbilityState[]
+  ).find((state) => state === requestedFigmaState);
   const [evidenceTarget, setEvidenceTarget] =
     useState<ProfileDimension | null>(null);
   const [challengeTarget, setChallengeTarget] =
@@ -1316,6 +1330,8 @@ export default function AbilityMapPage() {
           </aside>
         </div>
       ) : null}
+
+      {figmaState ? <FigmaAbilityStateDrawer state={figmaState} /> : null}
     </>
   );
 }

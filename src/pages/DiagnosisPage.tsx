@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ChallengeConversationDrawer from '../components/ChallengeConversationDrawer';
 import NegotiationFeedbackModal from '../components/NegotiationFeedbackModal';
@@ -49,6 +49,21 @@ export default function DiagnosisPage() {
   const [feedbackResult, setFeedbackResult] =
     useState<NegotiationFeedbackResultType>('observing');
   const [toastVisible, setToastVisible] = useState(false);
+  const figmaState = searchParams.get('figmaState');
+
+  useEffect(() => {
+    if (figmaState === 'calibration-drawer') {
+      setFeedbackOpen(false);
+      setChallengeOpen(true);
+      return;
+    }
+
+    if (figmaState === 'feedback-supported') {
+      setChallengeOpen(false);
+      setFeedbackResult('supported');
+      setFeedbackOpen(true);
+    }
+  }, [figmaState]);
 
   const shownGuess =
     queryGuessIndex !== null
