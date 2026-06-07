@@ -62,7 +62,94 @@ const pages: RouteEntry[] = [
   },
 ];
 
-const states: StateEntry[] = [
+const diagnosisStates: StateEntry[] = [
+  {
+    name: '诊断页 - 断点对照默认状态',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=breakpoint-default',
+    description: '展示三栏断点对照和底部主要操作。',
+  },
+  {
+    name: '诊断页 - 学生质疑抽屉初始状态',
+    page: '题目诊断',
+    route: '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-basis',
+    description: '打开右侧抽屉，展示断点选择和依据输入框。',
+    mock: true,
+  },
+  {
+    name: '诊断页 - 学生质疑已填写状态',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-filled',
+    description: '预选“后面计算出了问题”，并填入示例说明。',
+    mock: true,
+  },
+  {
+    name: '诊断页 - 依据提交后反馈',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-submitted',
+    description: '展示收到依据后的当前判断和后续操作。',
+    mock: true,
+  },
+  {
+    name: '诊断页 - 小验证状态',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-validation',
+    description: '展示 3 个用于确认本题断点的微任务。',
+    mock: true,
+  },
+  {
+    name: '诊断页 - 小验证结果状态',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-result',
+    description: '展示 2/3 通过和本题断点临时校准结果。',
+    mock: true,
+  },
+  {
+    name: '诊断页 - 完整解法展开状态',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=solution-open',
+    description: '自动展开正式诊断页中的完整解法区域。',
+  },
+];
+
+const abilityStates: StateEntry[] = [
+  {
+    name: '能力协商 - 判断依据',
+    page: '我的进步',
+    route: '/abilities?figmaState=negotiation-basis',
+    description: '右侧抽屉展示 AI 当前依据、补充方向和自然语言输入。',
+    mock: true,
+  },
+  {
+    name: '能力协商 - 小验证',
+    page: '我的进步',
+    route: '/abilities?figmaState=negotiation-validation',
+    description: '右侧抽屉展示 3 道能力微任务及通过状态按钮。',
+    mock: true,
+  },
+  {
+    name: '能力协商 - 临时更新',
+    page: '我的进步',
+    route: '/abilities?figmaState=negotiation-result',
+    description: '展示 3/3 通过、临时上调和后续操作。',
+    mock: true,
+  },
+  {
+    name: '能力协商 - 继续验证',
+    page: '我的进步',
+    route: '/abilities?figmaState=negotiation-continue',
+    description: '展示第二轮稍难的 mock 验证任务。',
+    mock: true,
+  },
+];
+
+const otherStates: StateEntry[] = [
   {
     name: '首页 - 调整计划弹窗',
     page: '今日学习路线',
@@ -78,47 +165,22 @@ const states: StateEntry[] = [
     mock: true,
   },
   {
-    name: '人机协商 - 判断依据',
-    page: '我的进步',
-    route: '/abilities?figmaState=negotiation-basis',
-    description: '右侧抽屉展示 AI 当前依据、补充方向和自然语言输入。',
-    mock: true,
+    name: '小练习 - 答题中',
+    page: '小练习',
+    route: '/practice?figmaState=question',
+    description: '展示目标、题目、起步判断和作答区。',
   },
   {
-    name: '人机协商 - 小验证',
-    page: '我的进步',
-    route: '/abilities?figmaState=negotiation-validation',
-    description: '右侧抽屉展示 3 道能力微任务及通过状态按钮。',
-    mock: true,
+    name: '小练习 - 提示展开',
+    page: '小练习',
+    route: '/practice?figmaState=hint-open',
+    description: '自动展开右侧“换种提醒”选项。',
   },
   {
-    name: '人机协商 - 临时更新',
-    page: '我的进步',
-    route: '/abilities?figmaState=negotiation-result',
-    description: '展示 3/3 通过、临时上调和后续操作。',
-    mock: true,
-  },
-  {
-    name: '人机协商 - 继续验证',
-    page: '我的进步',
-    route: '/abilities?figmaState=negotiation-continue',
-    description: '展示第二轮稍难的 mock 验证任务。',
-    mock: true,
-  },
-  {
-    name: '题目诊断 - 校准抽屉',
-    page: '断点诊断',
-    route:
-      '/diagnosis?question=q8&mode=ai&guess=2&figmaState=calibration-drawer',
-    description: '自动打开“我觉得不是这里”的断点校准抽屉。',
-    mock: true,
-  },
-  {
-    name: '题目诊断 - 最终记录弹窗',
-    page: '断点诊断',
-    route:
-      '/diagnosis?question=q8&mode=ai&guess=2&figmaState=feedback-supported',
-    description: '自动显示诊断调整后的最终确认弹窗。',
+    name: '小练习 - 提交反馈',
+    page: '小练习',
+    route: '/practice?figmaState=result',
+    description: '自动显示提交后的练习反馈和关联旧错题。',
     mock: true,
   },
 ];
@@ -152,6 +214,44 @@ function UrlText({ route }: { route: string }) {
     >
       {buildPublicUrl(route)}
     </a>
+  );
+}
+
+function StateList({ items }: { items: StateEntry[] }) {
+  return (
+    <div className="mt-4 space-y-4">
+      {items.map((item) => (
+        <article
+          className="rounded-[1.5rem] border border-ink/8 bg-white p-5 shadow-[0_8px_24px_rgba(47,52,59,0.035)]"
+          key={item.route}
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-semibold text-ink">{item.name}</h3>
+                {item.mock ? (
+                  <span className="rounded-full bg-accent-warning px-2.5 py-1 text-xs font-medium text-ink/52">
+                    Mock capture state
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs font-medium text-ink/38">
+                所属页面：{item.page}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-ink/50">
+                {item.description}
+              </p>
+              <div className="mt-3">
+                <UrlText route={item.route} />
+              </div>
+            </div>
+            <div className="md:self-center">
+              <PublicLink route={item.route}>打开状态</PublicLink>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -216,47 +316,38 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              2. 需要捕捉的 UI 状态
+              2. 诊断页状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
-              使用 figmaState 自动打开抽屉或弹窗，无需手动点击。
+              断点对照、质疑抽屉、小验证与完整解法均可通过公网 URL
+              直接打开。
             </p>
           </div>
-          <div className="mt-4 space-y-4">
-            {states.map((item) => (
-              <article
-                className="rounded-[1.5rem] border border-ink/8 bg-white p-5 shadow-[0_8px_24px_rgba(47,52,59,0.035)]"
-                key={item.route}
-              >
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-ink">
-                        {item.name}
-                      </h3>
-                      {item.mock ? (
-                        <span className="rounded-full bg-accent-warning px-2.5 py-1 text-xs font-medium text-ink/52">
-                          Mock capture state
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-2 text-xs font-medium text-ink/38">
-                      所属页面：{item.page}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-ink/50">
-                      {item.description}
-                    </p>
-                    <div className="mt-3">
-                      <UrlText route={item.route} />
-                    </div>
-                  </div>
-                  <div className="md:self-center">
-                    <PublicLink route={item.route}>打开状态</PublicLink>
-                  </div>
-                </div>
-              </article>
-            ))}
+          <StateList items={diagnosisStates} />
+        </section>
+
+        <section className="mt-8">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink">
+              3. 能力画像状态
+            </h2>
+            <p className="mt-1 text-sm text-ink/45">
+              保留已有能力协商的四个稳定捕捉状态。
+            </p>
           </div>
+          <StateList items={abilityStates} />
+        </section>
+
+        <section className="mt-8">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink">
+              4. 其他 UI 状态
+            </h2>
+            <p className="mt-1 text-sm text-ink/45">
+              首页弹窗、上传结果及其他可稳定复现的界面。
+            </p>
+          </div>
+          <StateList items={otherStates} />
         </section>
       </div>
     </main>

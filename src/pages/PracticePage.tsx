@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AbilityMascot from '../components/AbilityMascot';
 import ChallengeConversationDrawer from '../components/ChallengeConversationDrawer';
 import PrimaryButton from '../components/PrimaryButton';
@@ -7,6 +8,8 @@ import Tag from '../components/Tag';
 import { useLanguage } from '../i18n/LanguageContext';
 
 export default function PracticePage() {
+  const [searchParams] = useSearchParams();
+  const figmaState = searchParams.get('figmaState');
   const { t, tr } = useLanguage();
   const firstStepOptions = tr<string[]>('practice.firstOptions');
   const startMethods = tr<string[]>('practice.startMethods');
@@ -15,9 +18,11 @@ export default function PracticePage() {
   const methodQuestions = tr<string[]>('practice.methodQuestions');
   const [selectedFirstStep, setSelectedFirstStep] = useState(0);
   const [selectedMethod, setSelectedMethod] = useState(0);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(figmaState === 'hint-open');
   const [selectedHelp, setSelectedHelp] = useState(1);
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(
+    figmaState === 'result',
+  );
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
   const [methodResultVisible, setMethodResultVisible] = useState(false);

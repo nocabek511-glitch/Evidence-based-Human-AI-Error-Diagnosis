@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ChallengeConversationDrawer from '../components/ChallengeConversationDrawer';
+import FigmaDiagnosisStateDrawer, {
+  type FigmaDiagnosisState,
+} from '../components/FigmaDiagnosisStateDrawer';
 import NegotiationFeedbackModal from '../components/NegotiationFeedbackModal';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
@@ -50,8 +53,30 @@ export default function DiagnosisPage() {
     useState<NegotiationFeedbackResultType>('observing');
   const [toastVisible, setToastVisible] = useState(false);
   const figmaState = searchParams.get('figmaState');
+  const diagnosisFigmaState = (
+    [
+      'dispute-basis',
+      'dispute-filled',
+      'dispute-submitted',
+      'dispute-validation',
+      'dispute-result',
+    ] as FigmaDiagnosisState[]
+  ).find((state) => state === figmaState);
 
   useEffect(() => {
+    if (diagnosisFigmaState) {
+      setChallengeOpen(false);
+      setFeedbackOpen(false);
+      return;
+    }
+
+    if (figmaState === 'solution-open') {
+      setChallengeOpen(false);
+      setFeedbackOpen(false);
+      setFullSolutionOpen(true);
+      return;
+    }
+
     if (figmaState === 'calibration-drawer') {
       setFeedbackOpen(false);
       setChallengeOpen(true);
@@ -63,7 +88,7 @@ export default function DiagnosisPage() {
       setFeedbackResult('supported');
       setFeedbackOpen(true);
     }
-  }, [figmaState]);
+  }, [diagnosisFigmaState, figmaState]);
 
   const shownGuess =
     queryGuessIndex !== null
@@ -477,6 +502,10 @@ export default function DiagnosisPage() {
         open={feedbackOpen}
         resultType={feedbackResult}
       />
+
+      {diagnosisFigmaState ? (
+        <FigmaDiagnosisStateDrawer state={diagnosisFigmaState} />
+      ) : null}
     </div>
   );
 }
