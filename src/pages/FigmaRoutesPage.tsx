@@ -118,6 +118,65 @@ const diagnosisStates: StateEntry[] = [
   },
 ];
 
+const diagnosisDisputeStates: StateEntry[] = [
+  {
+    name: '错因协商 - 初始质疑',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-start',
+    description: '打开右侧抽屉，选择真正卡点并填写自己的依据。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 复核判断',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-review',
+    description: '展示学生判断、步骤复核、公式对比和当前建议记录。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 继续补充',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-supplement',
+    description: '展示已填写的继续补充输入页。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 补充后复核',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-supplement-review',
+    description: '带着学生补充内容再次展示步骤复核和建议记录。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 记录完成',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-recorded',
+    description: '自动打开记录完成弹窗，展示本题记录和后续说明。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 查看记录依据',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-recorded-evidence',
+    description: '记录完成弹窗中自动展开“系统看到的依据”。',
+    mock: true,
+  },
+  {
+    name: '错因协商 - 记录已更新',
+    page: '题目诊断',
+    route:
+      '/diagnosis?question=q8&mode=ai&guess=0&figmaState=dispute-record-updated',
+    description: '展示点击更新记录后的轻量完成提示。',
+    mock: true,
+  },
+];
+
 const abilityStates: StateEntry[] = [
   {
     name: '能力协商 - 判断依据',
@@ -370,7 +429,19 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              3. 能力画像状态
+              3. 错因诊断人机协商
+            </h2>
+            <p className="mt-1 text-sm text-ink/45">
+              从初始质疑到记录完成的五个关键阶段均可直接捕捉。
+            </p>
+          </div>
+          <StateList items={diagnosisDisputeStates} />
+        </section>
+
+        <section className="mt-8">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink">
+              4. 能力画像状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
               保留已有能力协商的四个稳定捕捉状态。
@@ -382,7 +453,7 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              4. 小练习页状态
+              5. 小练习页状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
               默认、提示展开、五种提示内容和“还是卡住”均可直接捕捉。
@@ -394,7 +465,7 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              5. 其他 UI 状态
+              6. 其他 UI 状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
               首页弹窗、上传结果及其他可稳定复现的界面。

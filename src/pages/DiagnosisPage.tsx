@@ -60,6 +60,13 @@ export default function DiagnosisPage() {
       'dispute-submitted',
       'dispute-validation',
       'dispute-result',
+      'dispute-start',
+      'dispute-review',
+      'dispute-supplement',
+      'dispute-supplement-review',
+      'dispute-recorded',
+      'dispute-recorded-evidence',
+      'dispute-record-updated',
     ] as FigmaDiagnosisState[]
   ).find((state) => state === figmaState);
 
