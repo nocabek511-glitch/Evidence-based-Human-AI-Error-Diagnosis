@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AbilityMascot from '../components/AbilityMascot';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
@@ -85,9 +86,13 @@ const getTaskRows = (tasks: PlanTasks) =>
   ].filter(Boolean) as { title: string; desc: string }[];
 
 export default function PlanPage() {
+  const [searchParams] = useSearchParams();
+  const figmaState = searchParams.get('figmaState');
   const [tasks, setTasks] = useState<PlanTasks>(recommendedTasks);
   const [draftTasks, setDraftTasks] = useState<PlanTasks>(recommendedTasks);
-  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(
+    figmaState === 'plan-adjust-modal',
+  );
   const [reasonOpen, setReasonOpen] = useState(false);
 
   const taskRows = useMemo(() => getTaskRows(tasks), [tasks]);

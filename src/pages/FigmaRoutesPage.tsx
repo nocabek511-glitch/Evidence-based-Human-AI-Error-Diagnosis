@@ -296,6 +296,16 @@ const practiceStates: StateEntry[] = [
   },
 ];
 
+const planStates: StateEntry[] = [
+  {
+    name: '学习安排 - 调整计划弹窗',
+    page: '学习安排',
+    route: '/plan?figmaState=plan-adjust-modal',
+    description:
+      '打开学习安排页并自动显示“调整今天计划”弹窗，默认选择 2 道错题、3 道专项和 1 道变式题。',
+  },
+];
+
 const otherStates: StateEntry[] = [
   {
     name: '首页 - 调整计划弹窗',
@@ -500,7 +510,19 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              6. 其他 UI 状态
+              6. 学习安排页状态
+            </h2>
+            <p className="mt-1 text-sm text-ink/45">
+              直接打开正式的 Day 1 任务调整弹窗，无需手动点击。
+            </p>
+          </div>
+          <StateList items={planStates} />
+        </section>
+
+        <section className="mt-8">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink">
+              7. 其他 UI 状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
               首页弹窗、上传结果及其他可稳定复现的界面。
