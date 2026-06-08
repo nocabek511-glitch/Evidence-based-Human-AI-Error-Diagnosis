@@ -149,6 +149,59 @@ const abilityStates: StateEntry[] = [
   },
 ];
 
+const practiceStates: StateEntry[] = [
+  {
+    name: '小练习 - 默认状态',
+    page: '小练习',
+    route: '/practice?figmaState=practice-default',
+    description: '提示卡保持收起，只显示“选择提示”入口。',
+  },
+  {
+    name: '小练习 - 提示选项展开',
+    page: '小练习',
+    route: '/practice?figmaState=hint-options-open',
+    description: '右侧提示卡自动展开，显示五种提示方式但不预选。',
+  },
+  {
+    name: '小练习 - 提醒关键条件',
+    page: '小练习',
+    route: '/practice?figmaState=hint-condition-selected',
+    description: '选中“提醒我看哪个条件”，展示售价与销量的关键条件。',
+  },
+  {
+    name: '小练习 - 问题式提示',
+    page: '小练习',
+    route: '/practice?figmaState=hint-question-selected',
+    description: '选中“给我一个问题”，通过问题引导学生发现 5x。',
+  },
+  {
+    name: '小练习 - 变量提示',
+    page: '小练习',
+    route: '/practice?figmaState=hint-variable-selected',
+    description: '选中“帮我确定变量”，展示设 x 和表示两个变量的提示。',
+  },
+  {
+    name: '小练习 - 第一步提示',
+    page: '小练习',
+    route: '/practice?figmaState=hint-first-step-selected',
+    description: '选中“给我第一步”，直接展示起始表达式。',
+  },
+  {
+    name: '小练习 - 相似例题',
+    page: '小练习',
+    route: '/practice?figmaState=hint-example-selected',
+    description: '选中“看一道相似例题”，展示简短 mock 例题卡。',
+    mock: true,
+  },
+  {
+    name: '小练习 - 还是卡住',
+    page: '小练习',
+    route: '/practice?figmaState=hint-still-stuck',
+    description: '展示更具体的下一层帮助选项。',
+    mock: true,
+  },
+];
+
 const otherStates: StateEntry[] = [
   {
     name: '首页 - 调整计划弹窗',
@@ -163,18 +216,6 @@ const otherStates: StateEntry[] = [
     route: '/upload?figmaState=scan-result',
     description: '展示整卷识别后的错题清单和统计摘要。',
     mock: true,
-  },
-  {
-    name: '小练习 - 答题中',
-    page: '小练习',
-    route: '/practice?figmaState=question',
-    description: '展示目标、题目、起步判断和作答区。',
-  },
-  {
-    name: '小练习 - 提示展开',
-    page: '小练习',
-    route: '/practice?figmaState=hint-open',
-    description: '自动展开右侧“换种提醒”选项。',
   },
   {
     name: '小练习 - 提交反馈',
@@ -341,7 +382,19 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              4. 其他 UI 状态
+              4. 小练习页状态
+            </h2>
+            <p className="mt-1 text-sm text-ink/45">
+              默认、提示展开、五种提示内容和“还是卡住”均可直接捕捉。
+            </p>
+          </div>
+          <StateList items={practiceStates} />
+        </section>
+
+        <section className="mt-8">
+          <div>
+            <h2 className="text-[22px] font-semibold text-ink">
+              5. 其他 UI 状态
             </h2>
             <p className="mt-1 text-sm text-ink/45">
               首页弹窗、上传结果及其他可稳定复现的界面。

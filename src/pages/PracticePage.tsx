@@ -7,25 +7,89 @@ import SecondaryButton from '../components/SecondaryButton';
 import Tag from '../components/Tag';
 import { useLanguage } from '../i18n/LanguageContext';
 
+const hintStateIndexes: Record<string, number> = {
+  'hint-question-selected': 0,
+  'hint-condition-selected': 1,
+  'hint-variable-selected': 2,
+  'hint-first-step-selected': 3,
+  'hint-example-selected': 4,
+};
+
+const openHintFigmaStates = new Set([
+  'hint-open',
+  'hint-options-open',
+  'hint-question-selected',
+  'hint-condition-selected',
+  'hint-variable-selected',
+  'hint-first-step-selected',
+  'hint-example-selected',
+  'hint-still-stuck',
+]);
+
 export default function PracticePage() {
   const [searchParams] = useSearchParams();
   const figmaState = searchParams.get('figmaState');
-  const { t, tr } = useLanguage();
+  const { isEnglish, t, tr } = useLanguage();
   const firstStepOptions = tr<string[]>('practice.firstOptions');
   const startMethods = tr<string[]>('practice.startMethods');
   const helpOptions = tr<[string, string][]>('practice.helpOptions');
   const feedbackActions = tr<string[]>('practice.feedbackActions');
   const methodQuestions = tr<string[]>('practice.methodQuestions');
+  const figmaSelectedHint = figmaState
+    ? hintStateIndexes[figmaState]
+    : undefined;
+  const initialSelectedHelp =
+    figmaState === 'hint-options-open'
+      ? null
+      : figmaSelectedHint ?? 1;
   const [selectedFirstStep, setSelectedFirstStep] = useState(0);
   const [selectedMethod, setSelectedMethod] = useState(0);
-  const [helpOpen, setHelpOpen] = useState(figmaState === 'hint-open');
-  const [selectedHelp, setSelectedHelp] = useState(1);
+  const [helpOpen, setHelpOpen] = useState(
+    figmaState ? openHintFigmaStates.has(figmaState) : false,
+  );
+  const [selectedHelp, setSelectedHelp] = useState<number | null>(
+    initialSelectedHelp,
+  );
+  const [stillStuckVisible, setStillStuckVisible] = useState(
+    figmaState === 'hint-still-stuck',
+  );
   const [feedbackVisible, setFeedbackVisible] = useState(
     figmaState === 'result',
   );
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
   const [methodResultVisible, setMethodResultVisible] = useState(false);
+  const figmaHintCopy: Record<string, string> = isEnglish
+    ? {
+        'hint-question-selected':
+          'If the price drops by x yuan, how many more notebooks will be sold each day?',
+        'hint-condition-selected':
+          'Focus on this condition: “For every 1-yuan price drop, daily sales increase by 5.”',
+        'hint-variable-selected':
+          'Let x be the price reduction, then express the new price and new sales separately.',
+        'hint-first-step-selected':
+          'Start with: after reducing the price by x yuan, the new price is 4 - x.',
+      }
+    : {
+        'hint-question-selected':
+          '如果售价降低了 x 元，那么每天销量会增加多少本？',
+        'hint-condition-selected':
+          '重点看“售价每降低 1 元，每天销量增加 5 本”这句话。',
+        'hint-variable-selected':
+          '可以先设降价 x 元，再分别表示新的售价和新的销量。',
+        'hint-first-step-selected':
+          '第一步先写：降价 x 元后，售价变为 4 - x。',
+      };
+  const selectedHintContent =
+    (figmaState && selectedHelp === figmaSelectedHint
+      ? figmaHintCopy[figmaState]
+      : undefined) ??
+    (selectedHelp === null ? '' : helpOptions[selectedHelp]?.[1]);
+  const showFigmaExample =
+    figmaState === 'hint-example-selected' && selectedHelp === 4;
+  const deeperHelpOptions = isEnglish
+    ? ['Set up the variables for me', 'Help write the relationship', 'Show an easier example']
+    : ['直接帮我列变量', '帮我写关系式', '给我一个更简单的例子'];
 
   return (
     <>
@@ -226,28 +290,84 @@ export default function PracticePage() {
                         : 'border-ink/10 bg-white text-ink/55 hover:bg-chalk'
                     }`}
                     key={label}
-                    onClick={() => setSelectedHelp(index)}
+                    onClick={() => {
+                      setSelectedHelp(index);
+                      setStillStuckVisible(false);
+                    }}
                     type="button"
                   >
                     {label}
                   </button>
                 ))}
-                <p className="rounded-2xl bg-chalk p-4 text-sm leading-6 text-ink/58">
-                  {helpOptions[selectedHelp]?.[1]}
-                </p>
-                <div className="grid gap-2">
-                  <PrimaryButton onClick={() => setHelpOpen(false)} variant="secondary">
-                    {t('practice.hintContinue')}
-                  </PrimaryButton>
-                  <SecondaryButton
-                    onClick={() =>
-                      setSelectedHelp((value) => (value + 1) % helpOptions.length)
-                    }
-                  >
-                    {t('practice.changeHint')}
-                  </SecondaryButton>
-                  <SecondaryButton>{t('practice.stillStuck')}</SecondaryButton>
-                </div>
+                {selectedHelp !== null ? (
+                  <>
+                    {showFigmaExample ? (
+                      <div className="rounded-2xl border border-model/25 bg-accent-warning/55 p-4">
+                        <p className="text-xs font-medium text-ink/42">
+                          {isEnglish ? 'Similar example' : '相似例题'}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-ink/62">
+                          {isEnglish
+                            ? 'A drink costs 8 yuan. For every 1-yuan discount, 4 more cups are sold. If the discount is x yuan, sales increase by 4x cups.'
+                            : '一杯饮料原价 8 元，每降价 1 元就多卖 4 杯。若降价 x 元，销量应增加 4x 杯。'}
+                        </p>
+                        <p className="mt-3 rounded-xl bg-white/80 px-3 py-2 text-sm font-medium text-ink/68">
+                          {isEnglish
+                            ? 'New price = 8 - x · Sales increase = 4x'
+                            : '新售价 = 8 - x · 销量增加 = 4x'}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="rounded-2xl bg-chalk p-4 text-sm leading-6 text-ink/58">
+                        {selectedHintContent}
+                      </p>
+                    )}
+
+                    {stillStuckVisible ? (
+                      <div className="rounded-2xl border border-translation/18 bg-accent-focus/60 p-4">
+                        <p className="text-sm font-medium leading-6 text-ink/68">
+                          {isEnglish
+                            ? 'That is okay. Let’s try a more specific kind of help.'
+                            : '没关系，我们再换一种更具体的提示。'}
+                        </p>
+                        <div className="mt-3 grid gap-2">
+                          {deeperHelpOptions.map((option) => (
+                            <button
+                              className="rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-left text-sm font-medium text-ink/58 transition hover:border-translation/30 hover:text-ink"
+                              key={option}
+                              type="button"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid gap-2">
+                        <PrimaryButton
+                          onClick={() => setHelpOpen(false)}
+                          variant="secondary"
+                        >
+                          {t('practice.hintContinue')}
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() =>
+                            setSelectedHelp((value) =>
+                              ((value ?? -1) + 1) % helpOptions.length
+                            )
+                          }
+                        >
+                          {t('practice.changeHint')}
+                        </SecondaryButton>
+                        <SecondaryButton
+                          onClick={() => setStillStuckVisible(true)}
+                        >
+                          {t('practice.stillStuck')}
+                        </SecondaryButton>
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </div>
             ) : null}
           </section>
