@@ -179,31 +179,66 @@ const diagnosisDisputeStates: StateEntry[] = [
 
 const abilityStates: StateEntry[] = [
   {
-    name: '能力协商 - 判断依据',
+    name: '能力画像协商 - 输入想法',
     page: '我的进步',
-    route: '/abilities?figmaState=negotiation-basis',
-    description: '右侧抽屉展示 AI 当前依据、补充方向和自然语言输入。',
+    route: '/abilities?figmaState=ability-negotiation-start',
+    description: '打开右侧抽屉，展示学生对能力画像判断的完整想法。',
     mock: true,
   },
   {
-    name: '能力协商 - 小验证',
+    name: '能力画像协商 - 系统理解想法',
     page: '我的进步',
-    route: '/abilities?figmaState=negotiation-validation',
-    description: '右侧抽屉展示 3 道能力微任务及通过状态按钮。',
+    route: '/abilities?figmaState=ability-negotiation-understood',
+    description: '系统复述学生想法，并给出补充依据或小验证入口。',
     mock: true,
   },
   {
-    name: '能力协商 - 临时更新',
+    name: '能力画像协商 - 补充依据',
     page: '我的进步',
-    route: '/abilities?figmaState=negotiation-result',
-    description: '展示 3/3 通过、临时上调和后续操作。',
+    route: '/abilities?figmaState=ability-negotiation-evidence',
+    description: '展示已填写的学习表现依据输入状态。',
     mock: true,
   },
   {
-    name: '能力协商 - 继续验证',
+    name: '能力画像协商 - 查看系统依据',
     page: '我的进步',
-    route: '/abilities?figmaState=negotiation-continue',
-    description: '展示第二轮稍难的 mock 验证任务。',
+    route: '/abilities?figmaState=ability-negotiation-system-basis',
+    description: '在输入想法状态下展开系统目前看到的三条依据。',
+    mock: true,
+  },
+  {
+    name: '能力画像协商 - 小验证',
+    page: '我的进步',
+    route: '/abilities?figmaState=ability-negotiation-validation',
+    description: '展示 3 道能力微任务，默认 3/3 通过。',
+    mock: true,
+  },
+  {
+    name: '能力画像协商 - 第一轮结果',
+    page: '我的进步',
+    route: '/abilities?figmaState=ability-negotiation-result',
+    description: '展示条件转化 58 → 60、小幅加分和正在变稳状态。',
+    mock: true,
+  },
+  {
+    name: '能力画像协商 - 继续验证',
+    page: '我的进步',
+    route: '/abilities?figmaState=ability-negotiation-continue',
+    description: '展示第二轮稍难的 3 道进阶验证任务。',
+    mock: true,
+  },
+  {
+    name: '能力画像协商 - 第二轮结果',
+    page: '我的进步',
+    route: '/abilities?figmaState=ability-negotiation-continue-result',
+    description: '展示条件转化 60 → 62 的第二轮临时更新。',
+    mock: true,
+  },
+  {
+    name: '能力画像协商 - 完成确认',
+    page: '我的进步',
+    route: '/abilities?figmaState=ability-negotiation-confirmed',
+    description: '展示调整已记录和 58 → 62 的记录摘要。',
     mock: true,
   },
 ];
@@ -441,10 +476,10 @@ export default function FigmaRoutesPage() {
         <section className="mt-8">
           <div>
             <h2 className="text-[22px] font-semibold text-ink">
-              4. 能力画像状态
+              4. 六维能力画像协商
             </h2>
             <p className="mt-1 text-sm text-ink/45">
-              保留已有能力协商的四个稳定捕捉状态。
+              从输入想法、补充依据到两轮验证和完成确认均可直接捕捉。
             </p>
           </div>
           <StateList items={abilityStates} />

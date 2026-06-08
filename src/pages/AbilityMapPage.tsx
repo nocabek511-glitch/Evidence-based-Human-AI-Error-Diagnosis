@@ -414,6 +414,15 @@ export default function AbilityMapPage() {
       'negotiation-validation',
       'negotiation-result',
       'negotiation-continue',
+      'ability-negotiation-start',
+      'ability-negotiation-understood',
+      'ability-negotiation-evidence',
+      'ability-negotiation-system-basis',
+      'ability-negotiation-validation',
+      'ability-negotiation-result',
+      'ability-negotiation-continue',
+      'ability-negotiation-continue-result',
+      'ability-negotiation-confirmed',
     ] as FigmaAbilityState[]
   ).find((state) => state === requestedFigmaState);
   const [evidenceTarget, setEvidenceTarget] =
